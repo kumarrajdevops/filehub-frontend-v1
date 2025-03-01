@@ -45,6 +45,15 @@ const Blogs = () => {
     }
   };
 
+  const deleteBlog = async (id: number) => {
+    try {
+      await api.delete(`/blogs/${id}/`);
+      setBlogs(blogs.filter((blog) => blog.id !== id)); // Remove blog from state
+    } catch {
+      setError("Error deleting blog.");
+    }
+  };
+
   return (
     <section className="bg-white dark:bg-gray-900">
       <div className="py-8 px-4 mx-auto max-w-screen-xl lg:py-16 lg:px-6">
@@ -231,6 +240,27 @@ const Blogs = () => {
                     ></path>
                   </svg>
                 </a>
+                <button
+                  onClick={() => deleteBlog(blog.id)}
+                  className="p-1 rounded-md bg-gray-100 text-gray-600 hover:bg-red-200 transition-all duration-200 shadow-sm hover:shadow focus:outline-none focus:ring-2 focus:ring-gray-300"
+                  aria-label="Delete Blog"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="w-4 h-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6l-2 14H7L5 6m5 0V4a2 2 0 012-2h2a2 2 0 012 2v2" />
+                    <line x1="10" y1="11" x2="10" y2="17" />
+                    <line x1="14" y1="11" x2="14" y2="17" />
+                  </svg>
+                </button>
               </div>
             </article>
           ))}
