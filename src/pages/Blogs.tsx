@@ -1,56 +1,66 @@
 import { useEffect, useState } from "react";
-import api from "../services/api";
 import { isAuthenticated } from "../services/authService";
 import { useNavigate } from "react-router-dom";
+import { fetchBlogs, addBlog, deleteBlog } from "../services/blogService";
+
+interface Blog {
+  id: number;
+  title: string;
+  content: string;
+}
 
 const Blogs = () => {
-  const [blogs, setBlogs] = useState<
-    { id: number; title: string; content: string }[]
-  >([]);
+  const [blogs, setBlogs] = useState<Blog[]>([]);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
-
   useEffect(() => {
     if (!isAuthenticated()) {
       navigate("/login"); // Redirect if not logged in
     } else {
-      fetchBlogs();
+      loadBlogs();
     }
   }, [navigate]);
 
-  const fetchBlogs = async () => {
+  const loadBlogs = async () => {
     try {
-      const res = await api.get("/blogs/");
-      setBlogs(res.data);
-    } catch {
-      setError("Error fetching blogs.");
+      const data = await fetchBlogs();
+      setBlogs(data);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "An error occurred while fetching the blogs "
+      );
     }
   };
 
-  const addBlog = async () => {
-    if (!title || !content) {
-      setError("Title and content are required.");
-      return;
-    }
-
+  const handleAddBlog = async () => {
     try {
-      await api.post("/blogs/", { title, content });
+      await addBlog(title, content);
       setTitle("");
       setContent("");
-      fetchBlogs();
-    } catch {
-      setError("Error adding blog.");
+      loadBlogs();
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "An error occurred while adding the blog"
+      );
     }
   };
 
-  const deleteBlog = async (id: number) => {
+  const handleDeleteBlog = async (id: number) => {
     try {
-      await api.delete(`/blogs/${id}/`);
-      setBlogs(blogs.filter((blog) => blog.id !== id)); // Remove blog from state
-    } catch {
-      setError("Error deleting blog.");
+      await deleteBlog(id);
+      setBlogs((prev) => prev.filter((blog) => blog.id !== id));
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "An error occurred while deleting the blog"
+      );
     }
   };
 
@@ -61,6 +71,7 @@ const Blogs = () => {
           <h2 className="mb-4 text-3xl lg:text-4xl tracking-tight font-extrabold text-gray-900 dark:text-white">
             Our Blog
           </h2>
+          {error && <p className="text-red-500">{error}</p>}
           <p className="font-light text-gray-500 sm:text-xl dark:text-gray-400">
             We use an agile approach to test assumptions and connect with the
             needs of your audience early and often.
@@ -241,7 +252,7 @@ const Blogs = () => {
                   </svg>
                 </a>
                 <button
-                  onClick={() => deleteBlog(blog.id)}
+                  onClick={() => handleDeleteBlog(blog.id)}
                   className="p-1 rounded-md bg-gray-100 text-gray-600 hover:bg-red-200 transition-all duration-200 shadow-sm hover:shadow focus:outline-none focus:ring-2 focus:ring-gray-300"
                   aria-label="Delete Blog"
                 >
@@ -291,7 +302,7 @@ const Blogs = () => {
             className="w-full p-2 border border-gray-300 rounded mb-2"
           />
           <button
-            onClick={addBlog}
+            onClick={handleAddBlog}
             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
           >
             Add Blog
